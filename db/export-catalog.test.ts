@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { categories, publishers, games } from './schema';
+import { categories, gameCategories, publishers, games } from './schema';
 import { createTestDatabase } from './test-helpers';
 import {
     toCatalogExport,
@@ -19,7 +19,7 @@ function makeGame(overrides: Partial<Game> = {}): Game {
         title: 'Merge Conflict',
         description: 'Kooperacyjna gra o rozwiązywaniu konfliktów.',
         starRating: 4.5,
-        category: { id: 1, name: 'Strategia' },
+        categories: [{ id: 1, name: 'Strategia' }],
         publisher: { id: 1, name: 'Rebase Games' },
         ...overrides,
     };
@@ -42,6 +42,7 @@ describe('toCatalogExport', () => {
             title: 'Merge Conflict',
             description: 'Kooperacyjna gra o rozwiązywaniu konfliktów.',
             category: 'Strategia',
+            categories: ['Strategia'],
             publisher: 'Rebase Games',
             starRating: 4.5,
             ratingLabel: '★★★★½',
@@ -94,20 +95,23 @@ describe('toCatalogExport', () => {
 
     it('wypisuje unikalne kategorie i wydawców alfabetycznie', () => {
         const exported = toCatalogExport([
-            makeGame({ id: 1, category: { id: 2, name: 'Akcja' }, publisher: { id: 2, name: 'Stack Overflow Studios' } }),
-            makeGame({ id: 2, title: 'Druga', category: { id: 1, name: 'Strategia' }, publisher: { id: 1, name: 'Rebase Games' } }),
-            makeGame({ id: 3, title: 'Trzecia', category: { id: 1, name: 'Strategia' }, publisher: { id: 1, name: 'Rebase Games' } }),
+            makeGame({ id: 1, categories: [{ id: 2, name: 'Akcja' }, { id: 1, name: 'Strategia' }], publisher: { id: 2, name: 'Stack Overflow Studios' } }),
+            makeGame({ id: 2, title: 'Druga', categories: [{ id: 1, name: 'Strategia' }], publisher: { id: 1, name: 'Rebase Games' } }),
+            makeGame({ id: 3, title: 'Trzecia', categories: [{ id: 1, name: 'Strategia' }], publisher: { id: 1, name: 'Rebase Games' } }),
         ]);
 
         expect(exported.categories).toEqual(['Akcja', 'Strategia']);
         expect(exported.publishers).toEqual(['Rebase Games', 'Stack Overflow Studios']);
+        const multiCategoryGame = exported.games.find((game) => game.id === 1);
+        expect(multiCategoryGame?.category).toBe('Akcja');
+        expect(multiCategoryGame?.categories).toEqual(['Akcja', 'Strategia']);
     });
 
     it('sortuje unikalne kategorie i wydawców porządkowo po jednostkach kodowych', () => {
         const exported = toCatalogExport([
-            makeGame({ id: 1, category: { id: 1, name: 'zeta' }, publisher: { id: 1, name: 'zeta' } }),
-            makeGame({ id: 2, title: 'Druga', category: { id: 2, name: 'Zeta' }, publisher: { id: 2, name: 'Zeta' } }),
-            makeGame({ id: 3, title: 'Trzecia', category: { id: 3, name: 'Ínca' }, publisher: { id: 3, name: 'Ínca' } }),
+            makeGame({ id: 1, categories: [{ id: 1, name: 'zeta' }], publisher: { id: 1, name: 'zeta' } }),
+            makeGame({ id: 2, title: 'Druga', categories: [{ id: 2, name: 'Zeta' }], publisher: { id: 2, name: 'Zeta' } }),
+            makeGame({ id: 3, title: 'Trzecia', categories: [{ id: 3, name: 'Ínca' }], publisher: { id: 3, name: 'Ínca' } }),
         ]);
 
         expect(exported.categories).toEqual(['Zeta', 'zeta', 'Ínca']);
@@ -116,11 +120,12 @@ describe('toCatalogExport', () => {
 
     it('wstawia zastępniki za brakujące relacje i pomija brakującą ocenę', () => {
         const exported = toCatalogExport([
-            makeGame({ category: null, publisher: null, starRating: null }),
+            makeGame({ categories: [], publisher: null, starRating: null }),
         ]);
 
         const [game] = exported.games;
         expect(game.category).toBe('Bez kategorii');
+        expect(game.categories).toEqual([]);
         expect(game.publisher).toBe('Nieznany wydawca');
         expect(game.starRating).toBeUndefined();
         expect(game.ratingLabel).toBe('Brak oceny');
@@ -129,7 +134,7 @@ describe('toCatalogExport', () => {
     it('nigdy nie emituje wartości null', () => {
         const exported = toCatalogExport([
             makeGame(),
-            makeGame({ id: 2, title: 'Same nulle', category: null, publisher: null, starRating: null }),
+            makeGame({ id: 2, title: 'Same nulle', categories: [], publisher: null, starRating: null }),
         ]);
 
         expect(containsNull(exported)).toBe(false);
@@ -181,13 +186,13 @@ describe('writeCatalogExport', () => {
             .values({ name: 'Rebase Games', description: 'wyd' })
             .returning({ id: publishers.id });
 
-        await db.insert(games).values({
+        const [game] = await db.insert(games).values({
             title: 'Merge Conflict',
             description: 'Kooperacyjna gra o rozwiązywaniu konfliktów.',
             starRating: 4.5,
-            categoryId: category.id,
             publisherId: publisher.id,
-        });
+        }).returning({ id: games.id });
+        await db.insert(gameCategories).values({ gameId: game.id, categoryId: category.id });
 
         tempDir = mkdtempSync(join(tmpdir(), 'catalog-export-'));
         const outputPath = join(tempDir, 'nested', 'catalog.json');

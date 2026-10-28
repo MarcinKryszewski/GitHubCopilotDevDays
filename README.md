@@ -9,7 +9,7 @@ Tailspin Toys to platforma crowdfundingowa dla gier planszowych o tematyce progr
 ## Architektura
 
 - **Astro 7**: strony, layouty, komponenty i routing. `output: 'static'`, więc cała witryna jest prerenderowana do HTML w czasie budowania.
-- **Drizzle ORM + Node SQLite**: warstwa danych. Schemat w `db/schema.ts`, dane zasilane z `db/games.csv`. Migracjami zarządza `drizzle-kit`.
+- **Drizzle ORM + Node SQLite**: warstwa danych. Schemat w `db/schema.ts`, dane zasilane z `db/games.csv`, a wiele kategorii na grę łączy tabela `game_categories`. Migracjami zarządza `drizzle-kit`.
 - **Tailwind CSS v4**: stylowanie klasami narzędziowymi (ciemny motyw).
 - **Vitest**: testy jednostkowe warstwy danych i czystych transformacji.
 - **Playwright**: testy end-to-end uruchamiane na zbudowanej witrynie statycznej.
@@ -46,6 +46,8 @@ npm run build      # prebuild migruje i zasila, potem buduje witrynę statyczną
 npm run preview
 ```
 
+Katalog na stronie głównej można filtrować po jednej lub wielu kategoriach (gra musi mieć wszystkie wybrane kategorie) oraz po wydawcy. Wyniki aktualizują się w przeglądarce bez przeładowania strony.
+
 ## Baza danych
 
 Baza SQLite powstaje z `db/games.csv`. Nie ma żadnych danych produkcyjnych do migrowania.
@@ -59,7 +61,7 @@ npm run db:export     # zapisz zasilony katalog do db/catalog.json
 ```
 
 > [!NOTE]
-> Zasilanie jest idempotentne: pomija gry, które już są w bazie (po tytule), zamiast uzgadniać zmienione wiersze. CI zawsze startuje z czystą bazą, więc odzwierciedla `games.csv` dokładnie. Lokalnie, jeśli zmienisz albo usuniesz wiersze w `games.csv`, skasuj `tailspin.db` i uruchom ponownie `npm run db:setup`.
+> W kolumnie `Category` można podać kilka kategorii rozdzielonych średnikami, np. `Strategia;Akcja`. Zasilanie jest idempotentne: pomija gry, które już są w bazie (po tytule), i dodaje brakujące relacje kategorii, zamiast uzgadniać zmienione lub usunięte wiersze. CI zawsze startuje z czystą bazą, więc odzwierciedla `games.csv` dokładnie. Lokalnie, jeśli zmienisz albo usuniesz wiersze w `games.csv`, skasuj `tailspin.db` i uruchom ponownie `npm run db:setup`.
 
 ## Testy
 

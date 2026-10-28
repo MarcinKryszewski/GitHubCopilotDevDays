@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { eq } from 'drizzle-orm';
 import { createDatabase, type Database } from '../src/lib/db';
-import { categories, games, publishers } from './schema';
+import { categories, gameCategories, games, publishers } from './schema';
 import {
     categoryDescription,
     gameDescription,
@@ -58,17 +58,42 @@ export async function seedDatabase(db: Database, csvPath: string = join(here, 'g
     const publisherIds = await upsertPublishers(db, uniquePublishers(rows));
 
     for (const row of rows) {
-        const existing = await db.select().from(games).where(eq(games.title, row.title)).limit(1);
+        const existing = await db
+            .select({ id: games.id })
+            .from(games)
+            .where(eq(games.title, row.title))
+            .limit(1);
+        let gameId: number;
+
         if (existing.length > 0) {
-            continue;
+            gameId = existing[0].id;
+        } else {
+            const [game] = await db
+                .insert(games)
+                .values({
+                    title: row.title,
+                    description: gameDescription(row.description),
+                    starRating: ratingFromTitle(row.title),
+                    publisherId: publisherIds.get(row.publisher)!,
+                })
+                .returning({ id: games.id });
+            gameId = game.id;
         }
-        await db.insert(games).values({
-            title: row.title,
-            description: gameDescription(row.description),
-            starRating: ratingFromTitle(row.title),
-            categoryId: categoryIds.get(row.category)!,
-            publisherId: publisherIds.get(row.publisher)!,
-        });
+
+        const existingCategories = await db
+            .select({ categoryId: gameCategories.categoryId })
+            .from(gameCategories)
+            .where(eq(gameCategories.gameId, gameId));
+        const existingCategoryIds = new Set(existingCategories.map((entry) => entry.categoryId));
+        const newCategoryIds = row.categories
+            .map((name) => categoryIds.get(name)!)
+            .filter((categoryId) => !existingCategoryIds.has(categoryId));
+
+        if (newCategoryIds.length > 0) {
+            await db.insert(gameCategories).values(
+                newCategoryIds.map((categoryId) => ({ gameId, categoryId })),
+            );
+        }
     }
 }
 
