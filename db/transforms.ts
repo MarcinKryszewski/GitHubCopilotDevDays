@@ -6,7 +6,7 @@
 
 export interface GameCsvRow {
     title: string;
-    category: string;
+    categories: string[];
     publisher: string;
     description: string;
 }
@@ -90,7 +90,14 @@ export function parseGamesCsv(content: string): GameCsvRow[] {
         .filter((row) => (row.Title ?? '').trim().length > 0)
         .map((row) => ({
             title: row.Title.trim(),
-            category: row.Category.trim(),
+            categories: [
+                ...new Set(
+                    (row.Category ?? '')
+                        .split(';')
+                        .map((category) => category.trim())
+                        .filter((category) => category.length > 0),
+                ),
+            ],
             publisher: row.Publisher.trim(),
             description: row.Description.trim(),
         }));
@@ -110,7 +117,7 @@ export function gameDescription(rawDescription: string): string {
 
 /** Unikalne nazwy kategorii w kolejności pierwszego wystąpienia. */
 export function uniqueCategories(rows: GameCsvRow[]): string[] {
-    return [...new Set(rows.map((row) => row.category))];
+    return [...new Set(rows.flatMap((row) => row.categories))];
 }
 
 /** Unikalne nazwy wydawców w kolejności pierwszego wystąpienia. */

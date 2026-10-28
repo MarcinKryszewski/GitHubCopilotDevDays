@@ -89,7 +89,8 @@ test.describe('Lista gier i nawigacja', () => {
 
     await test.step('Sprawdź, że jest wydawca lub kategoria', async () => {
       const publisherExists = await page.getByTestId('game-details-publisher').isVisible();
-      const categoryExists = await page.getByTestId('game-details-category').isVisible();
+      const categories = page.locator('[data-testid^="game-details-category-"]');
+      const categoryExists = await categories.first().isVisible();
       expect(publisherExists || categoryExists).toBeTruthy();
 
       if (publisherExists) {
@@ -97,7 +98,7 @@ test.describe('Lista gier i nawigacja', () => {
       }
 
       if (categoryExists) {
-        await expect(page.getByTestId('game-details-category')).not.toBeEmpty();
+        await expect(categories.first()).not.toBeEmpty();
       }
     });
   });

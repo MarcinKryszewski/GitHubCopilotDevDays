@@ -46,10 +46,18 @@ describe('parseGamesCsv', () => {
         expect(rows).toHaveLength(2);
         expect(rows[0]).toEqual({
             title: 'Gra A',
-            category: 'Strategia',
+            categories: ['Strategia'],
             publisher: 'Wydawca Jeden',
             description: 'Opis A',
         });
+    });
+
+    it('parsuje wiele kategorii rozdzielonych średnikami', () => {
+        const [row] = parseGamesCsv(
+            'Title,Category,Publisher,Description\n"Gra A"," Strategia; ; Akcja; Strategia ","Wydawca","Opis"',
+        );
+
+        expect(row.categories).toEqual(['Strategia', 'Akcja']);
     });
 
     it('pomija wiersze bez tytułu', () => {
@@ -80,13 +88,13 @@ describe('helpery opisów', () => {
 
 describe('helpery usuwające duplikaty', () => {
     const rows: GameCsvRow[] = [
-        { title: 'A', category: 'Strategia', publisher: 'W1', description: '' },
-        { title: 'B', category: 'Łamigłówki', publisher: 'W1', description: '' },
-        { title: 'C', category: 'Strategia', publisher: 'W2', description: '' },
+        { title: 'A', categories: ['Strategia', 'Akcja'], publisher: 'W1', description: '' },
+        { title: 'B', categories: ['Łamigłówki'], publisher: 'W1', description: '' },
+        { title: 'C', categories: ['Strategia'], publisher: 'W2', description: '' },
     ];
 
     it('zwraca unikalne kategorie w kolejności pierwszego wystąpienia', () => {
-        expect(uniqueCategories(rows)).toEqual(['Strategia', 'Łamigłówki']);
+        expect(uniqueCategories(rows)).toEqual(['Strategia', 'Akcja', 'Łamigłówki']);
     });
 
     it('zwraca unikalnych wydawców w kolejności pierwszego wystąpienia', () => {

@@ -31,6 +31,7 @@ export interface CatalogGame {
     title: string;
     description: string;
     category: string;
+    categories: string[];
     publisher: string;
     /** Pomijane całkowicie, gdy gra nie ma oceny, żeby w eksporcie nie było nulli. */
     starRating?: number;
@@ -57,7 +58,8 @@ function mapCatalogGame(game: Game): CatalogGame {
         id: game.id,
         title: game.title,
         description: game.description,
-        category: game.category?.name ?? UNKNOWN_CATEGORY,
+        category: game.categories[0]?.name ?? UNKNOWN_CATEGORY,
+        categories: game.categories.map((category) => category.name),
         publisher: game.publisher?.name ?? UNKNOWN_PUBLISHER,
         ...(game.starRating !== null ? { starRating: game.starRating } : {}),
         ratingLabel: formatStarRating(game.starRating),
@@ -92,7 +94,7 @@ export function toCatalogExport(games: Game[]): CatalogExport {
         source: 'Katalog crowdfundingowy Tailspin Toys',
         note: GROUNDING_NOTE,
         gameCount: entries.length,
-        categories: distinctSorted(entries.map((entry) => entry.category)),
+        categories: distinctSorted(entries.flatMap((entry) => entry.categories)),
         publishers: distinctSorted(entries.map((entry) => entry.publisher)),
         games: entries,
     };

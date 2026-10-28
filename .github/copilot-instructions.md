@@ -40,6 +40,7 @@ To platforma crowdfundingowa dla gier o tematyce programistycznej. Aplikacja to 
 ### Wzorce warstwy danych (Drizzle + Node SQLite)
 
 - Tabele definiuj w `db/schema.ts`; zmiany schematu zarządzaj migracjami drizzle-kit, zob. `drizzle.instructions.md`
+- Gry mogą mieć wiele kategorii; relację wiele-do-wielu przechowuje tabela `game_categories`, a typ aplikacyjny `Game` udostępnia tablicę `categories`
 - Helpery dostępu do danych trzymaj w `src/lib/` z **wstrzykiwanym argumentem `db`**, żeby dało się je testować
 - Logikę CSV/seed trzymaj jako czyste funkcje w `db/transforms.ts`
 - Wartości wyprowadzane z seeda muszą być deterministyczne (bez `Math.random`), żeby statyczne buildy były odtwarzalne
