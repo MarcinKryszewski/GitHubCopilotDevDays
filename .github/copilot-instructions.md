@@ -36,6 +36,7 @@ To platforma crowdfundingowa dla gier o tematyce programistycznej. Aplikacja to 
 
 - Używaj TypeScriptu z jawnymi typami parametrów funkcji i wartości zwracanych, zwłaszcza w warstwie danych (`db/`, `src/lib/`)
 - Kod frontendu (TypeScript, Astro) musi przechodzić kontrolę ESLint (`npm run lint`)
+- Każdy nowy kod TypeScript ma zawierać komentarze TSDoc dokumentujące funkcje i typy.
 
 ### Wzorce warstwy danych (Drizzle + Node SQLite)
 
