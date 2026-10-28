@@ -1,0 +1,49 @@
+name: Zgłoszenie błędu
+description: Zgłoś błąd lub nieoczekiwane zachowanie
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dziękujemy, że poświęcasz czas na zgłoszenie błędu! Wypełnij poniższe informacje, żebyśmy mogli to zbadać.
+  - type: textarea
+    id: description
+    attributes:
+      label: Opisz błąd
+      description: Jasny i zwięzły opis tego, na czym polega błąd.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Kroki do odtworzenia
+      description: Kroki pozwalające odtworzyć zachowanie.
+      placeholder: |
+        1. Przejdź do '...'
+        2. Kliknij '...'
+        3. Pojawia się błąd
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Oczekiwane zachowanie
+      description: Czego się spodziewałeś(-aś)?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Zrzuty ekranu
+      description: Jeśli to pomoże, dodaj zrzuty ekranu ilustrujące problem.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Środowisko
+      description: Podaj istotne szczegóły środowiska.
+      placeholder: |
+        - System operacyjny: [np. macOS 15, Windows 11]
+        - Przeglądarka: [np. Chrome 130, Safari 18]
+        - Wersja Node.js: [np. 20.x]
+    validations:
+      required: true

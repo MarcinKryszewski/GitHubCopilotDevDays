@@ -1,0 +1,43 @@
+# Konfiguracja Dependabota, który automatyzuje aktualizacje zależności.
+# Sekcja updates określa, jak Dependabot ma je obsługiwać:
+# - pilnuje zależności npm w katalogu głównym
+# - sprawdza aktualizacje co tydzień
+# - stosuje 7-dniową karencję, żeby świeżo opublikowane wersje zdążyły dojrzeć
+# - grupuje aktualizacje według typu (deweloperskie: minor/patch, produkcyjne: patch)
+#
+# Więcej: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-the-dependabotyml-file
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Odczekaj 7 dni od publikacji wersji, zanim ją zaproponujesz, żeby świeże
+    # pakiety zdążyły zostać sprawdzone (zgodnie z naszą polityką karencji).
+    cooldown:
+      default-days: 7
+    groups:
+      npm-development:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      npm-production:
+        dependency-type: production
+        update-types:
+          - patch
+    # Trzymaj klasyczny pakiet `typescript` w wersji 6, dopóki typescript-eslint
+    # (lint z typami) i @astrojs/check nie obsłużą API natywnego kompilatora
+    # (tsgo, ok. TS 7.1). TypeScript 7 jest już używany równolegle przez pakiet
+    # @typescript/native-preview (`npm run typecheck`); podbicie klasycznego
+    # typescript@7 zepsułoby teraz `npm run lint` i `astro check`.
+    ignore:
+      - dependency-name: "typescript"
+        versions: ["7.x"]
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Ta sama 7-dniowa karencja dla aktualizacji obrazów i funkcji devcontainera.
+    cooldown:
+      default-days: 7

@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import Button from '../components/Button.astro';
+import ArrowLeft from '../assets/icons/arrow-left.svg';
+---
+
+<Layout title="O nas - Tailspin Toys">
+  <section class="max-w-5xl mx-auto px-4 py-8" data-testid="about-section">
+    <Card class="shadow-lg p-8 transition-colors duration-300">
+      <h2 class="text-blue-400 text-4xl mb-8 pb-3 border-b border-slate-600 font-bold" data-testid="about-heading">O Tailspin Toys</h2>
+
+      <div class="space-y-6">
+        <p class="text-lg leading-relaxed text-slate-300">
+          Tailspin Toys to platforma crowdfundingowa dla gier planszowych o tematyce programistycznej i DevOps. Wierzymy, że ten sam duch współpracy, te same iteracje i to samo rozwiązywanie problemów, które napędzają zespoły programistyczne, mogą dać świetną zabawę przy stole. Skupiamy się wyłącznie na grach o ciągłej integracji, planowaniu w metodykach zwinnych, orkiestracji kontenerów czy reagowaniu na incydenty. Dzięki temu zarówno doświadczeni programiści, jak i ciekawi nowicjusze mogą wspierać, a nawet współtworzyć gry, które ich najbardziej kręcą.
+        </p>
+
+        <p class="text-lg leading-relaxed text-slate-300">
+          Wspieramy twórców na każdym etapie projektowania. Od pierwszych szkiców koncepcji po testy finalnego prototypu Tailspin Toys daje narzędzia do zbierania opinii społeczności, planowania celów dodatkowych i sesji beta. Wspierający mogą dzielić się na forach domowymi zasadami, głosować nad kierunkiem grafiki albo sfinansować dodatki z nowymi mechanikami, jak wyzwania „wąskie gardło w pipeline" czy karty ratunkowe „rollback". Logistykę produkcji i wysyłki bierzemy na siebie, żeby projektanci mogli skupić się na tym, co najfajniejsze, a wspierający czekać na solidne komponenty dostarczone pod drzwi.
+        </p>
+
+        <p class="text-lg leading-relaxed text-slate-300">
+          Nazwa „Tailspin Toys" to ukłon w stronę lotniczych metafor i tej chwili, w której projekt zaczyna żyć własnym życiem, wirując przez sprinty, wydania i hotfiksy, aż w końcu wzbija się w górę. Założył nas zespół programistów, którzy w głębi duszy zawsze byli graczami. Znamy z pierwszej ręki satysfakcję z pokonania podstępnego błędu albo bezbłędnego wdrożenia, i wiemy, o ile większą frajdę daje ogranie znajomych przy stole (albo wspólne zwycięstwo w trybie kooperacji). Czy chcesz wesprzeć swoją następną ulubioną grę, czy wypuścić własny projekt w klimacie DevOps, witaj na pokładzie. Gramy dalej, razem!
+        </p>
+      </div>
+
+      <div class="mt-12 flex justify-center">
+        <Button href="/" class="hover:shadow-lg hover:shadow-blue-600/20">
+          <ArrowLeft class="h-5 w-5 mr-2" aria-hidden="true" />
+          Wróć do gier
+        </Button>
+      </div>
+    </Card>
+  </section>
+</Layout>

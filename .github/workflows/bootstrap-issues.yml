@@ -1,0 +1,50 @@
+name: Załóż zgłoszenia startowe
+
+# GitHub nie ma zdarzenia „utworzono z szablonu", więc ten workflow uruchamia się
+# przy pierwszym pushu na gałąź domyślną (utworzenie repo z szablonu robi pierwszy
+# commit, który wywołuje ten push). Warunek is_template pomija samo repozytorium
+# szablonowe, a ostatni krok usuwa ten workflow i katalog ze zgłoszeniami, żeby
+# całość wykonała się dokładnie raz na nowej kopii.
+on:
+  push:
+    branches: [main]
+  # Ręczne uruchomienie na wypadek, gdyby pierwszy push z szablonu nie odpalił Actions.
+  workflow_dispatch:
+
+jobs:
+  create-issues:
+    # Pomiń na repozytorium szablonowym (is_template == true); uruchamiaj tylko
+    # na kopiach z niego utworzonych (is_template == false).
+    if: ${{ !github.event.repository.is_template }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write    # założenie zgłoszeń startowych
+      contents: write  # commit usuwający pliki startowe
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      # Każdy plik Markdown w .github/bootstrap-issues/ staje się jednym zgłoszeniem:
+      # pierwszy nagłówek to tytuł, reszta to treść. Pliki przetwarzane są
+      # w kolejności alfabetycznej, więc zgłoszenia powstają jako 1, 2, 3.
+      - name: Załóż zgłoszenia startowe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for file in $(ls .github/bootstrap-issues/*.md | sort); do
+            title=$(head -n 1 "$file" | sed 's/^#[[:space:]]*//')
+            tail -n +2 "$file" > "${RUNNER_TEMP}/issue-body.md"
+            gh issue create --title "$title" --body-file "${RUNNER_TEMP}/issue-body.md"
+          done
+
+      # Usuń ten workflow i katalog ze zgłoszeniami, żeby bootstrap wykonał się
+      # tylko raz. Commit jest robiony tokenem GITHUB_TOKEN, który celowo nie
+      # wywołuje kolejnego uruchomienia workflow.
+      - name: Usuń pliki startowe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -r .github/workflows/bootstrap-issues.yml .github/bootstrap-issues
+          git commit -m "Usuń pliki startowe szablonu"
+          git push

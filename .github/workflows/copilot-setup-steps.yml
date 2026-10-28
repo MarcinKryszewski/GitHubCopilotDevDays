@@ -1,0 +1,36 @@
+name: "Copilot Setup Steps"
+
+# Pozwala przetestować kroki konfiguracji z zakładki „Actions" w repozytorium
+on: workflow_dispatch
+
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    # Ustaw najniższe uprawnienia potrzebne *Twoim krokom*. Copilot dostanie własny token na swoje operacje.
+    permissions:
+      # Jeśli w krokach konfiguracji klonujesz repozytorium, np. żeby zainstalować zależności, potrzebujesz `contents: read`. Jeśli nie klonujesz, Copilot zrobi to sam po zakończeniu kroków.
+      contents: read
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      # Konfiguracja aplikacji: Node.js (cała aplikacja to Astro + Drizzle/Node SQLite)
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Zainstaluj zależności JavaScript
+        run: npm ci
+
+      - name: Zainstaluj przeglądarki Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Zmigruj i zasil lokalną bazę SQLite, żeby buildy i testy miały dane.
+      - name: Przygotuj bazę danych
+        run: npm run db:setup

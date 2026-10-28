@@ -1,0 +1,139 @@
+name: "Testy"
+
+# Uruchamiaj testy dla pull requestów do main i pushy na main
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Anuluj trwające uruchomienia dla tej samej gałęzi, żeby szybkie pushe nie
+# czekały w kolejce za nieaktualnymi (oszczędza czas runnerów, szybszy feedback).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Ciche i powtarzalne uruchomienia CI.
+  ASTRO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # Lint frontendu ESLintem
+  frontend-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Zainstaluj zależności JavaScript
+        run: npm ci
+
+      # Wygeneruj typy Astro, żeby ESLint widział to samo, co edytor.
+      - name: Zsynchronizuj typy Astro
+        run: npx astro sync
+
+      # Sprawdź jakość kodu ESLintem
+      - name: Uruchom ESLint
+        run: npm run lint
+
+  # Kontrola typów: czysty TypeScript natywnym kompilatorem TS 7 (tsgo
+  # z @typescript/native-preview), pliki .astro przez astro check (na klasycznym
+  # pakiecie TypeScript). Lint nie zależy od żadnego z nich.
+  type-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Zainstaluj zależności JavaScript
+        run: npm ci
+
+      # tsgo (TS 7) dla .ts + astro sync/check (klasyczny TS) dla .astro
+      - name: Uruchom kontrolę typów
+        run: npm run typecheck:all
+
+  # Testy jednostkowe Vitest (czyste transformacje + helpery dostępu do danych)
+  unit-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Zainstaluj zależności JavaScript
+        run: npm ci
+
+      - name: Uruchom testy jednostkowe
+        run: npm run test:unit
+
+  # Zbuduj witrynę statyczną i uruchom na niej testy end-to-end Playwright
+  frontend-tests:
+    runs-on: ubuntu-latest
+    # Uruchamiane w oficjalnym obrazie Playwright, w którym przeglądarki i ich
+    # systemowe zależności są już zainstalowane. Takie podejście zaleca
+    # dokumentacja CI Playwright (https://playwright.dev/docs/ci) i pozwala
+    # pominąć wolny, zależny od sieci krok `playwright install --with-deps`.
+    # Tag MUSI odpowiadać wersji @playwright/test w package-lock.json, żeby
+    # wbudowane przeglądarki się zgadzały. Podbij go przy każdej aktualizacji Playwright.
+    container: mcr.microsoft.com/playwright:v1.63.0-noble
+    permissions:
+      contents: read
+
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v5
+
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: "./package-lock.json"
+
+      - name: Zainstaluj zależności JavaScript
+        run: npm ci
+
+      # webServer w konfiguracji Playwright buduje witrynę statyczną (prebuild
+      # uruchamia db:migrate + db:seed) i serwuje ją przez `astro preview`.
+      - name: Uruchom testy e2e Playwright
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Wyślij raport Playwright
+        uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

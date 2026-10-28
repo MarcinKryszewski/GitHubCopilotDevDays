@@ -1,0 +1,54 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'button'>, 'type'> {
+    /** Wariant wizualny przycisku. */
+    variant?: 'solid' | 'gradient';
+    /** Skala odstępów wewnętrznych. */
+    size?: 'sm' | 'md';
+    /** Gdy podane, renderuje link (`<a>`) zamiast `<button>`. */
+    href?: string;
+    /** Typ przycisku, gdy renderowany jako `<button>`. */
+    type?: 'button' | 'submit' | 'reset';
+    /** Rozciąga przycisk na całą szerokość kontenera. */
+    fullWidth?: boolean;
+}
+
+const {
+    variant = 'solid',
+    size = 'md',
+    href,
+    type = 'button',
+    fullWidth = false,
+    class: className,
+    ...rest
+} = Astro.props;
+
+const base =
+    'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none';
+
+const variants: Record<NonNullable<Props['variant']>, string> = {
+    solid: 'bg-blue-600 hover:bg-blue-700 text-white',
+    gradient:
+        'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white',
+};
+
+const sizes: Record<NonNullable<Props['size']>, string> = {
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3',
+};
+
+const classes = [base, variants[variant], sizes[size], fullWidth && 'w-full', className];
+---
+
+{
+    href ? (
+        <a href={href} class:list={classes} {...rest}>
+            <slot />
+        </a>
+    ) : (
+        <button type={type} class:list={classes} {...rest}>
+            <slot />
+        </button>
+    )
+}
