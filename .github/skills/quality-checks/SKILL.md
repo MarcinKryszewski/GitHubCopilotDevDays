@@ -142,3 +142,7 @@ npx vitest run src/lib/games.test.ts
 3. Uruchom testy jednostkowe (jeśli zmieniła się warstwa danych / helpery): `npm run test:unit`
 4. Sprawdź, czy nowa funkcjonalność ma odpowiednie pokrycie testami jednostkowymi
 5. Potwierdź, że żadne testy jednostkowe nie zostały zepsute, pominięte ani wyłączone
+
+## Format raportu z wyników
+
+Po zakończeniu wypisz każdą uruchomioną komendę i podaj, czy przeszła, nie przeszła, czy została zablokowana. Liczbę testów, czasy, błędy, ostrzeżenia i inne metryki podawaj tylko wtedy, gdy narzędzie je zgłosiło. Dla każdego błędu lub blokady wskaż następny krok. Nigdy nie opisuj pominiętej albo niedokończonej kontroli jako zaliczonej.
